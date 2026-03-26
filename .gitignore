@@ -1,4 +1,8 @@
-#will put data folder here soon
-
 .env
 .env.local
+.venv/
+.venv
+__pycache__/
+./search_engine/.venv/
+./search_engine/__pycache__/
+data/
