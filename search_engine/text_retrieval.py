@@ -181,7 +181,7 @@ class TextRetrieval():
     return BM25PLNVector
 
   def BM25PLN_score(self,query,doc, applyBM25_and_IDF=False):
-    # q = self.text2BM25PLN(query)
+    q = self.text2BM25PLN(query)
     d = self.text2BM25PLN(doc, applyBM25_and_IDF)
 
     relevance = np.dot(q, d)
