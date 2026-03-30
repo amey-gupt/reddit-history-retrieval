@@ -23,6 +23,7 @@ class TextRetrieval():
     #grab data
     repo_root = Path(__file__).resolve().parent.parent
     self.input_path = repo_root / "data" / "raw" / "subreddit-AskHistorians" / "utterances.jsonl"
+    self.preprocessed_path = repo_root / "data" / "processed" / "preprocessed_utterances.csv"
     self.max_docs = 50000
     
     #use preprocessing described in assignment 1
@@ -30,6 +31,27 @@ class TextRetrieval():
 
     nltk.download('stopwords')
     self.stop_words = set(stopwords.words('english'))
+
+  def save_preprocessed_data(self):
+    if self.dataset is None:
+      return
+    self.preprocessed_path.parent.mkdir(parents=True, exist_ok=True)
+    self.dataset.to_csv(self.preprocessed_path, index=False)
+
+  def load_preprocessed_data(self):
+    if not self.preprocessed_path.exists():
+      return False
+
+    self.dataset = pd.read_csv(self.preprocessed_path)
+    if self.dataset.shape[0] == 0:
+      self.avdl = 0
+      return True
+
+    word_sum = 0
+    for _, row in self.dataset.iterrows():
+      word_sum += len(str(row[2]).split())
+    self.avdl = word_sum / self.dataset.shape[0]
+    return True
 
 
   def read_and_preprocess_Data_File(self):
@@ -159,7 +181,7 @@ class TextRetrieval():
     return BM25PLNVector
 
   def BM25PLN_score(self,query,doc, applyBM25_and_IDF=False):
-    q = self.text2BM25PLN(query)
+    # q = self.text2BM25PLN(query)
     d = self.text2BM25PLN(doc, applyBM25_and_IDF)
 
     relevance = np.dot(q, d)
@@ -181,7 +203,9 @@ class TextRetrieval():
 
 if __name__ == '__main__':
     tr = TextRetrieval()
-    tr.read_and_preprocess_Data_File() #builds the collection
+    if not tr.load_preprocessed_data():
+      tr.read_and_preprocess_Data_File() #builds the collection
+      tr.save_preprocessed_data()
     tr.build_vocabulary()#builds an initial vocabulary based on common words
     queries = ["roman empire collapse", "medieval trade routes", "american civil war causes"]
     print("#########\n")
