@@ -66,7 +66,7 @@ class TextRetrieval():
         text = obj.get("text", "")
         if not isinstance(text, str) or text.strip() == "":
           continue
-        # Keep [1] as display field and [2] as retrieval text to preserve your code flow.
+        # Keep [1] as display field and [2] as retrieval text to preserve code flow
         records.append([obj.get("subreddit", "AskHistorians"), obj.get("id", ""), text])
         if len(records) >= self.max_docs:
           break
@@ -94,7 +94,6 @@ class TextRetrieval():
         new_line += line[i]
         i += 1
       line = new_line
-      #TODO: Implement removing stopwords and punctuation
       words = line.split()
       updated_words = []
       for i, w in enumerate(words):
