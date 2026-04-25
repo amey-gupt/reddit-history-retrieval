@@ -5,4 +5,4 @@
 __pycache__/
 ./search_engine/.venv/
 ./search_engine/__pycache__/
-data/
+./data/raw/
