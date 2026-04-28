@@ -22,7 +22,7 @@ class TextRetrieval():
   def __init__(self):
     #grab data
     repo_root = Path(__file__).resolve().parent.parent
-    self.input_path = repo_root / "data" / "raw" / "subreddit-AskHistorians" / "utterances.jsonl"
+    self.input_path = repo_root / "data" / "processed" / "threads.jsonl" 
     self.max_docs = 50000
     
     #use preprocessing described in assignment 1
@@ -45,7 +45,11 @@ class TextRetrieval():
         if not isinstance(text, str) or text.strip() == "":
           continue
         # Keep [1] as display field and [2] as retrieval text to preserve your code flow.
-        records.append([obj.get("subreddit", "AskHistorians"), obj.get("id", ""), text])
+        records.append([
+          obj.get("subreddit", "AskHistorians"),
+          obj.get("thread_id", ""),
+          text
+        ])
         if len(records) >= self.max_docs:
           break
 
