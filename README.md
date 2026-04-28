@@ -7,7 +7,7 @@ Use one shared virtual environment at the repository root.
 1. Create and activate the environment (Python 3.12):
 
 ```powershell
-cd "C:\Users\ameyg\Documents\CS 410\reddit-history-retrieval"
+cd "path\reddit-history-retrieval"
 py -3.12 -m venv .venv
 .\.venv\Scripts\Activate.ps1
 ```
@@ -35,7 +35,7 @@ Notes:
 Run from `search_engine` after activating the root environment.
 
 ```powershell
-cd "C:\Users\ameyg\Documents\CS 410\reddit-history-retrieval\search_engine"
+cd "path\reddit-history-retrieval\search_engine"
 New-Item -ItemType Directory -Force -Path ..\data\raw | Out-Null
 python -c "from convokit import download; p=download('subreddit-AskHistorians', data_dir=r'..\data\raw'); print(p)"
 ```
