@@ -42,7 +42,7 @@ class TextRetrieval():
     if not self.preprocessed_path.exists():
       return False
 
-    self.dataset = pd.read_csv(self.preprocessed_path)
+    self.dataset = pd.read_csv(self.input_path, low_memory=False).fillna("")
     if self.dataset.shape[0] == 0:
       self.avdl = 0
       return True
@@ -209,8 +209,8 @@ if __name__ == '__main__':
       idxs = np.argsort(relevance_docs)
       print("\ntop 5 most relevant:")
       for i in reversed(idxs[-5:]):
-        print(f"thread_id: {tr.dataset.loc[i, 'thread_id']}, title: {tr.dataset.loc[i, 'title']}, score: {relevance_docs[i]}")
+        print(f"thread_id: {tr.dataset.loc[i, 'thread_id']}, title: {tr.dataset.loc[i, 'title']}, url: {tr.dataset.loc[i, 'url']}, score: {relevance_docs[i]}")
 
       print("\nbottom 5 least relevant:")
       for i in idxs[:5]:
-        print(f"thread_id: {tr.dataset.loc[i, 'thread_id']}, title: {tr.dataset.loc[i, 'title']}, score: {relevance_docs[i]}")
+        print(f"thread_id: {tr.dataset.loc[i, 'thread_id']}, title: {tr.dataset.loc[i, 'title']}, url: {tr.dataset.loc[i, 'url']}, score: {relevance_docs[i]}")
