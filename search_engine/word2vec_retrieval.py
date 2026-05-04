@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 from pathlib import Path
-from gensim.models import Word2Vec
+import gensim.downloader as api
 from sklearn.metrics.pairwise import cosine_similarity
 
 class Word2VecRetrieval:
@@ -9,9 +9,8 @@ class Word2VecRetrieval:
     def __init__(self):
         repo_root = Path(__file__).resolve().parent.parent
         self.preprocessed_path = repo_root / "data" / "processed" / "preprocessed_utterances.csv"
-        self.model_path = repo_root / "data" / "processed" / "word2vec.model"
         self.dataset = None
-        self.model = None
+        self.w2v_model = None
         self.doc_vectors = None
 
     def load_preprocessed_data(self):
@@ -22,47 +21,22 @@ class Word2VecRetrieval:
         print(f"Loaded {len(self.dataset)} documents.")
         return True
 
-    def train(self, vector_size=100, window=5, min_count=2, epochs=10):
-        if self.dataset is None:
-            print("No data loaded.")
-            return
-
-        sentences = [
-            str(row.iloc[2]).split()
-            for _, row in self.dataset.iterrows()
-        ]
-
-        print("Training Word2Vec...")
-        self.model = Word2Vec(
-            sentences=sentences,
-            vector_size=vector_size,
-            window=window,
-            min_count=min_count,
-            epochs=epochs,
-            workers=4
-        )
-        self.model.save(str(self.model_path))
-        print(f"Model saved to: {self.model_path}")
-        self._build_doc_vectors()
-
     def load_model(self):
-        if not self.model_path.exists():
-            print("No saved model found. Run train() first.")
-            return False
-        self.model = Word2Vec.load(str(self.model_path))
-        self._build_doc_vectors()
+        print("Loading pretrained GloVe model...")
+        self.w2v_model = api.load("glove-wiki-gigaword-50")
         print("Model loaded.")
-        return True
+        self._build_doc_vectors()
 
     def _text_to_vector(self, text):
         words = str(text).split()
-        vectors = [
-            self.model.wv[w]
-            for w in words
-            if w in self.model.wv
-        ]
+        vectors = []
+        for word in words:
+            try:
+                vectors.append(self.w2v_model[word])
+            except KeyError:
+                continue
         if not vectors:
-            return np.zeros(self.model.vector_size)
+            return np.zeros(self.w2v_model.vector_size)
         return np.mean(vectors, axis=0)
 
     def _build_doc_vectors(self):
@@ -74,8 +48,8 @@ class Word2VecRetrieval:
         print("Document vectors ready.")
 
     def execute_search_word2vec(self, query):
-        if self.model is None or self.doc_vectors is None:
-            print("Model not ready. Call train() or load_model() first.")
+        if self.w2v_model is None or self.doc_vectors is None:
+            print("Model not ready. Call load_model() first.")
             return np.array([])
 
         query_vector = self._text_to_vector(query).reshape(1, -1)
@@ -89,12 +63,11 @@ if __name__ == '__main__':
     if not w2v.load_preprocessed_data():
         exit()
 
-    if not w2v.load_model():
-        w2v.train()
+    w2v.load_model()
 
     queries = ["roman empire collapse", "medieval trade routes", "american civil war causes"]
     print("#########\n")
-    print("Results for Word2Vec")
+    print("Results for Word2Vec (GloVe pretrained)")
     for query in queries:
         print("\nQUERY:", query)
         scores = w2v.execute_search_word2vec(query)
