@@ -203,7 +203,7 @@ if __name__ == '__main__':
       tr.read_and_preprocess_Data_File() #builds the collection
       tr.save_preprocessed_data()
     tr.build_vocabulary() #builds an initial vocabulary based on common words
-    queries = ["roman empire collapse", "medieval trade routes", "american civil war causes"]
+    queries = ["roman empire collapse", "medieval trade routes", "american civil war causes", "french revolution", "fall of berlin wall"]
     print("#########\n")
     print("Results for BM25PLN")
     for query in queries:

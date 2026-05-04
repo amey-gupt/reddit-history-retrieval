@@ -72,7 +72,7 @@ if __name__ == '__main__':
 
     w2v.load_model()
 
-    queries = ["roman empire collapse", "medieval trade routes", "american civil war causes"]
+    queries = ["roman empire collapse", "medieval trade routes", "american civil war causes", "french revolution", "fall of berlin wall"]
     print("#########\n")
     print("Results for Word2Vec (GloVe pretrained)")
     for query in queries:
