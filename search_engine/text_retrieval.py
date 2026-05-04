@@ -6,7 +6,6 @@ from nltk.corpus import stopwords
 import math
 import json
 from pathlib import Path
-from nltk.stem import PorterStemmer
 
 class TextRetrieval():
 
@@ -15,7 +14,7 @@ class TextRetrieval():
   stop_words=set()
 
   #For VSM definition
-  vocab = np.zeros(200)
+  vocab = np.zeros(10000)
   dataset = None
   K = 3 #
   B = 0.5 #[0,1]
@@ -25,7 +24,6 @@ class TextRetrieval():
     repo_root = Path(__file__).resolve().parent.parent
     self.input_path = repo_root / "data" / "processed" / "threads.csv"
     self.preprocessed_path = repo_root / "data" / "processed" / "threads_preprocessed.csv"
-    self.max_docs = 50000
     
     #use preprocessing described in assignment 1
     self.punctuations = "\'\"\\,<>./?@#$%^&*_~/!()-[]{};:"
@@ -64,7 +62,6 @@ class TextRetrieval():
     punctuations = self.punctuations
     stop_words = self.stop_words
     digits = "0123456789"
-    ps = PorterStemmer()
 
     word_sum = 0
     prepro_content = []
@@ -98,7 +95,6 @@ class TextRetrieval():
           for d in digits:
               w = w.replace(d, "")
           if w and w not in stop_words:
-              w = ps.stem(w)
               updated_words.append(w)
 
       word_sum += len(updated_words)
