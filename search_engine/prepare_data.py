@@ -1,9 +1,10 @@
 import json
 from pathlib import Path
+import csv
 
 input_path = Path("..") / "data" / "raw" / "subreddit-AskHistorians" / "utterances.jsonl"
 conversation_path = Path("..") / "data" / "raw" / "subreddit-AskHistorians" / "conversations.json"
-output_path = Path("..") / "data" / "processed" / "threads.jsonl"
+output_path = Path("..") / "data" / "processed" / "threads.csv"
 
 output_path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -33,38 +34,33 @@ with input_path.open("r", encoding="utf-8") as f:
             threads[thread_id] = {
                 "thread_id": thread_id,
                 "title": title,
-                "initial_post": "",
-                "comments": [],
-                "url": "https://reddit.com" + permalink if permalink else "",
+                "content_parts": [],
+                "url": "",
                 #"subreddit": meta.get("subreddit", "AskHistorians")
             }
 
-        # Original post
-        if reply_to is None:
-            threads[thread_id]["initial_post"] = text
+        if reply_to is None and permalink:
+            threads[thread_id]["url"] = "https://reddit.com" + permalink
 
-            if title:
-                threads[thread_id]["title"] = title
+        if text:
+            threads[thread_id]["content_parts"].append(text)
 
-            if permalink:
-                threads[thread_id]["url"] = "https://reddit.com" + permalink
+rows = []
+for thread in threads.values():
+    content = " ".join(thread["content_parts"]).strip()
+    if thread["title"] == "" and content == "":
+        continue
 
-        # Comments and replies
-        else:
-            threads[thread_id]["comments"].append(text)
+    rows.append({
+        "thread_id": thread["thread_id"],
+        "title": thread["title"],
+        "content": content,
+        "url": thread["url"],
+    })
 
-with output_path.open("w", encoding="utf-8") as f:
-    saved_count = 0
+with output_path.open("w", encoding="utf-8", newline="") as f:
+    w = csv.DictWriter(f, fieldnames=["thread_id", "title", "content", "url"])
+    w.writeheader()
+    w.writerows(rows)
 
-    for thread in threads.values():
-        if (
-            thread["title"] == ""
-            and thread["initial_post"] == ""
-            and len(thread["comments"]) == 0
-        ):
-            continue
-
-        f.write(json.dumps(thread, ensure_ascii=False) + "\n")
-        saved_count += 1
-
-print("Saved", saved_count, "threads to", output_path)
+print("Saved", len(rows), "threads to", output_path)
