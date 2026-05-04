@@ -6,6 +6,7 @@ from nltk.corpus import stopwords
 import math
 import json
 from pathlib import Path
+from nltk.stem import PorterStemmer
 
 class TextRetrieval():
 
@@ -63,6 +64,7 @@ class TextRetrieval():
     punctuations = self.punctuations
     stop_words = self.stop_words
     digits = "0123456789"
+    ps = PorterStemmer()
 
     word_sum = 0
     prepro_content = []
@@ -95,7 +97,8 @@ class TextRetrieval():
               w = w.replace(p, "")
           for d in digits:
               w = w.replace(d, "")
-          if w not in stop_words:
+          if w and w not in stop_words:
+              w = ps.stem(w)
               updated_words.append(w)
 
       word_sum += len(updated_words)
