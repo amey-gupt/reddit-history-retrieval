@@ -22,8 +22,8 @@ class TextRetrieval():
   def __init__(self):
     #grab data
     repo_root = Path(__file__).resolve().parent.parent
-    self.input_path = repo_root / "data" / "raw" / "subreddit-AskHistorians" / "utterances.jsonl"
-    self.preprocessed_path = repo_root / "data" / "processed" / "preprocessed_utterances.csv"
+    self.input_path = repo_root / "data" / "processed" / "threads.csv"
+    self.preprocessed_path = self.input_path
     self.max_docs = 50000
     
     #use preprocessing described in assignment 1
