@@ -81,9 +81,9 @@ if __name__ == '__main__':
         idxs = np.argsort(scores)
 
         print("\ntop 10 most relevant:")
-        for i in reversed(idxs[-5:]):
+        for i in reversed(idxs[-10:]):
             print(f"thread_id: {w2v.dataset.loc[i, 'thread_id']}, title: {w2v.dataset.loc[i, 'title']}, url: {w2v.dataset.loc[i, 'url']}, score: {scores[i]}")
 
         print("\nbottom 10 least relevant:")
-        for i in idxs[:5]:
+        for i in idxs[:10]:
             print(f"thread_id: {w2v.dataset.loc[i, 'thread_id']}, title: {w2v.dataset.loc[i, 'title']}, url: {w2v.dataset.loc[i, 'url']}, score: {scores[i]}")
