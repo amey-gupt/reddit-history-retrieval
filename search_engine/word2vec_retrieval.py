@@ -15,10 +15,17 @@ class Word2VecRetrieval:
 
     def load_preprocessed_data(self):
         if not self.preprocessed_path.exists():
-            print("Preprocessed data not found. Run preprocess.py first.")
             return False
-        self.dataset = pd.read_csv(self.preprocessed_path)
-        print(f"Loaded {len(self.dataset)} documents.")
+
+        self.dataset = pd.read_csv(self.preprocessed_path, low_memory=False).fillna("")
+        if self.dataset.shape[0] == 0:
+            self.avdl = 0
+            return True
+
+        word_sum = 0
+        for _, row in self.dataset.iterrows():
+            word_sum += len(str(row["content"]).split())
+        self.avdl = word_sum / self.dataset.shape[0]
         return True
 
     def load_model(self):
@@ -42,7 +49,7 @@ class Word2VecRetrieval:
     def _build_doc_vectors(self):
         print("Building document vectors...")
         self.doc_vectors = np.array([
-            self._text_to_vector(str(row.iloc[2]))
+            self._text_to_vector(str(row["content"]))
             for _, row in self.dataset.iterrows()
         ])
         print("Document vectors ready.")
@@ -75,8 +82,8 @@ if __name__ == '__main__':
 
         print("\ntop 5 most relevant:")
         for i in reversed(idxs[-5:]):
-            print(f"document: {w2v.dataset.iloc[i, 1]}, score: {scores[i]:.4f}")
+            print(f"thread_id: {w2v.dataset.loc[i, 'thread_id']}, title: {w2v.dataset.loc[i, 'title']}, url: {w2v.dataset.loc[i, 'url']}, score: {scores[i]}")
 
         print("\nbottom 5 least relevant:")
         for i in idxs[:5]:
-            print(f"document: {w2v.dataset.iloc[i, 1]}, score: {scores[i]:.4f}")
+            print(f"thread_id: {w2v.dataset.loc[i, 'thread_id']}, title: {w2v.dataset.loc[i, 'title']}, url: {w2v.dataset.loc[i, 'url']}, score: {scores[i]}")
