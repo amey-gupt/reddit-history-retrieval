@@ -23,7 +23,7 @@ class TextRetrieval():
     #grab data
     repo_root = Path(__file__).resolve().parent.parent
     self.input_path = repo_root / "data" / "processed" / "threads.csv"
-    self.preprocessed_path = self.input_path
+    self.preprocessed_path = repo_root / "data" / "processed" / "threads_preprocessed.csv"
     self.max_docs = 50000
     
     #use preprocessing described in assignment 1
@@ -49,7 +49,7 @@ class TextRetrieval():
 
     word_sum = 0
     for _, row in self.dataset.iterrows():
-      word_sum += len(str(row[2]).split())
+      word_sum += len(str(row["content"]).split())
     self.avdl = word_sum / self.dataset.shape[0]
     return True
 
@@ -59,28 +59,16 @@ class TextRetrieval():
     ### preprocesses
     ### Stores the formated information in the same "dataset" object
 
-    records = []
-    with self.input_path.open("r", encoding="utf-8") as handle:
-      for line in handle:
-        obj = json.loads(line)
-        text = obj.get("text", "")
-        if not isinstance(text, str) or text.strip() == "":
-          continue
-        # Keep [1] as display field and [2] as retrieval text to preserve code flow
-        records.append([obj.get("subreddit", "AskHistorians"), obj.get("id", ""), text])
-        if len(records) >= self.max_docs:
-          break
-
-    dataset = pd.DataFrame(records)
+    dataset = pd.read_csv(self.input_path, low_memory=False).fillna("")
     punctuations = self.punctuations
     stop_words = self.stop_words
     digits = "0123456789"
 
     word_sum = 0
+    prepro_content = []
 
-    dataset.head()
     for index, row in dataset.iterrows():
-      line = row[2]
+      line = str(row["content"])
       new_line = ""
       i = 0
       while (i < len(line)):
@@ -93,6 +81,8 @@ class TextRetrieval():
               continue
         new_line += line[i]
         i += 1
+
+      
       line = new_line
       words = line.split()
       updated_words = []
@@ -109,9 +99,13 @@ class TextRetrieval():
               updated_words.append(w)
 
       word_sum += len(updated_words)
-      dataset.loc[index, 2] = ' '.join(updated_words)
+      prepro_content.append(' '.join(updated_words))
+
+      if (index + 1) % 10000 == 0:
+        print(f"Preprocessed {index + 1} threads")
     
-    self.avdl = word_sum/dataset.shape[0]
+    dataset["content"] = prepro_content
+    self.avdl = word_sum / dataset.shape[0] if dataset.shape[0] > 0 else 0
     self.dataset = dataset #Set dataset as object attribute
 
   def build_vocabulary(self): #,collection):
@@ -120,7 +114,7 @@ class TextRetrieval():
 
     frq = {}
     for index, row in self.dataset.iterrows():
-      line = row[2]
+      line = row["content"]
       words = line.split()
       for w in words:
         frq[w] = frq.get(w, 0) + 1
@@ -190,12 +184,12 @@ class TextRetrieval():
     self.adapt_vocab_query(query) #Ensure query is part of the "common language" of documents and query 
 
     # global IDF
-    self.compute_IDF(self.dataset.shape[0],self.dataset[2]) 
+    self.compute_IDF(self.dataset.shape[0],self.dataset["content"]) 
 
     relevances = np.zeros(self.dataset.shape[0]) #Initialize relevances of all documents to 0
 
     for i in range(relevances.size):
-      relevances[i] = self.BM25PLN_score(query, self.dataset.iloc[i, 2], True)
+      relevances[i] = self.BM25PLN_score(query, self.dataset.loc[i, "content"], True)
 
     return relevances #in the same order of the documents in the dataset
 
@@ -205,7 +199,7 @@ if __name__ == '__main__':
     if not tr.load_preprocessed_data():
       tr.read_and_preprocess_Data_File() #builds the collection
       tr.save_preprocessed_data()
-    tr.build_vocabulary()#builds an initial vocabulary based on common words
+    tr.build_vocabulary() #builds an initial vocabulary based on common words
     queries = ["roman empire collapse", "medieval trade routes", "american civil war causes"]
     print("#########\n")
     print("Results for BM25PLN")
@@ -215,8 +209,8 @@ if __name__ == '__main__':
       idxs = np.argsort(relevance_docs)
       print("\ntop 5 most relevant:")
       for i in reversed(idxs[-5:]):
-        print(f"document: {tr.dataset.loc[i, 1]}, score: {relevance_docs[i]}")
+        print(f"thread_id: {tr.dataset.loc[i, 'thread_id']}, title: {tr.dataset.loc[i, 'title']}, score: {relevance_docs[i]}")
 
       print("\nbottom 5 least relevant:")
       for i in idxs[:5]:
-        print(f"document: {tr.dataset.loc[i, 1]}, score: {relevance_docs[i]}")
+        print(f"thread_id: {tr.dataset.loc[i, 'thread_id']}, title: {tr.dataset.loc[i, 'title']}, score: {relevance_docs[i]}")

@@ -8,7 +8,7 @@ class Word2VecRetrieval:
 
     def __init__(self):
         repo_root = Path(__file__).resolve().parent.parent
-        self.preprocessed_path = repo_root / "data" / "processed" / "preprocessed_utterances.csv"
+        self.preprocessed_path = repo_root / "data" / "processed" / "threads_preprocessed.csv"
         self.dataset = None
         self.w2v_model = None
         self.doc_vectors = None
