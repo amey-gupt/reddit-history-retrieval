@@ -80,10 +80,10 @@ if __name__ == '__main__':
         scores = w2v.execute_search_word2vec(query)
         idxs = np.argsort(scores)
 
-        print("\ntop 5 most relevant:")
+        print("\ntop 10 most relevant:")
         for i in reversed(idxs[-5:]):
             print(f"thread_id: {w2v.dataset.loc[i, 'thread_id']}, title: {w2v.dataset.loc[i, 'title']}, url: {w2v.dataset.loc[i, 'url']}, score: {scores[i]}")
 
-        print("\nbottom 5 least relevant:")
+        print("\nbottom 10 least relevant:")
         for i in idxs[:5]:
             print(f"thread_id: {w2v.dataset.loc[i, 'thread_id']}, title: {w2v.dataset.loc[i, 'title']}, url: {w2v.dataset.loc[i, 'url']}, score: {scores[i]}")

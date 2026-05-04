@@ -210,10 +210,10 @@ if __name__ == '__main__':
       print("\nQUERY:",query)
       relevance_docs = tr.execute_search_BM25PLN(query)
       idxs = np.argsort(relevance_docs)
-      print("\ntop 5 most relevant:")
+      print("\ntop 10 most relevant:")
       for i in reversed(idxs[-5:]):
         print(f"thread_id: {tr.dataset.loc[i, 'thread_id']}, title: {tr.dataset.loc[i, 'title']}, url: {tr.dataset.loc[i, 'url']}, score: {relevance_docs[i]}")
 
-      print("\nbottom 5 least relevant:")
+      print("\nbottom 10 least relevant:")
       for i in idxs[:5]:
         print(f"thread_id: {tr.dataset.loc[i, 'thread_id']}, title: {tr.dataset.loc[i, 'title']}, url: {tr.dataset.loc[i, 'url']}, score: {relevance_docs[i]}")
