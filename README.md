@@ -32,7 +32,7 @@ Notes:
 - Use the activated root environment for all Python work in this project.
 
 ### Download + Quick Validation (AskHistorians)
-Note: if you would like to skip downloading/processing the data on your own machine, feel free to use our finished CSV! The link is in the [preprocessing section](#preprocessing).
+Note: if you would like to skip downloading/processing the data on your own machine, feel free to use our finished data! The link is in the [preprocessing section](#preprocessing).
 
 Run from `search_engine` after activating the root environment.
 
@@ -64,7 +64,7 @@ This produces:
 - `data/processed/topic_labels.csv`
 
 Note that preprocessing prepares a large file (can be 1-2 GB) and can take over an hour.
-If you would like to instead download the CSV, please [click here](https://drive.google.com/drive/folders/1EJ3oJgJsaZpWx1gWF0aLedisRLFc1iIs?usp=sharing). If you decide to use our file, please place the file inside `/data/processed/` after downloading. The full path should be `reddit-history-retrieval/data/processed/threads_preprocessed.csv`.
+If you would like to instead download the CSV, please [click here](https://drive.google.com/drive/folders/1EJ3oJgJsaZpWx1gWF0aLedisRLFc1iIs?usp=sharing). If you decide to use our file, please place the file inside `/data/processed/` after downloading. The full path should be `reddit-history-retrieval/data/processed/threads_preprocessed.csv`. The topic labels list is also included, which is needed for the topic modeling viewing script. Please insert it into the same directory (`reddit-history-retrieval/data/processed/topic_labels.csv`).
 
 If you would like to run the preprocessing yourself, please use the following command usage:
 ```powershell
