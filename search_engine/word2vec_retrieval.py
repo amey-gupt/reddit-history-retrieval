@@ -15,17 +15,10 @@ class Word2VecRetrieval:
 
     def load_preprocessed_data(self):
         if not self.preprocessed_path.exists():
+            print("Preprocessed data not found. Run preprocess.py first, or download the data from the link provided.")
             return False
-
-        self.dataset = pd.read_csv(self.preprocessed_path, low_memory=False).fillna("")
-        if self.dataset.shape[0] == 0:
-            self.avdl = 0
-            return True
-
-        word_sum = 0
-        for _, row in self.dataset.iterrows():
-            word_sum += len(str(row["content"]).split())
-        self.avdl = word_sum / self.dataset.shape[0]
+        self.dataset = pd.read_csv(self.preprocessed_path)
+        print(f"Loaded {len(self.dataset)} documents.")
         return True
 
     def load_model(self):
@@ -48,8 +41,9 @@ class Word2VecRetrieval:
 
     def _build_doc_vectors(self):
         print("Building document vectors...")
+        col = "full_text" if "full_text" in self.dataset.columns else "content"
         self.doc_vectors = np.array([
-            self._text_to_vector(str(row["content"]))
+            self._text_to_vector(str(row[col]))
             for _, row in self.dataset.iterrows()
         ])
         print("Document vectors ready.")
@@ -72,18 +66,17 @@ if __name__ == '__main__':
 
     w2v.load_model()
 
-    queries = ["roman empire collapse", "medieval trade routes", "american civil war causes", "french revolution", "fall of berlin wall"]
-    print("#########\n")
+    queries = ["roman empire collapse", "medieval trade routes", "american civil war causes"]
     print("Results for Word2Vec (GloVe pretrained)")
     for query in queries:
         print("\nQUERY:", query)
         scores = w2v.execute_search_word2vec(query)
         idxs = np.argsort(scores)
 
-        print("\ntop 10 most relevant:")
-        for i in reversed(idxs[-10:]):
-            print(f"thread_id: {w2v.dataset.loc[i, 'thread_id']}, title: {w2v.dataset.loc[i, 'title']}, url: {w2v.dataset.loc[i, 'url']}, score: {scores[i]}")
+        print("\ntop 5 most relevant:")
+        for i in reversed(idxs[-5:]):
+            print(f"document: {w2v.dataset.iloc[i, 1]}, score: {scores[i]:.4f}")
 
-        print("\nbottom 10 least relevant:")
-        for i in idxs[:10]:
-            print(f"thread_id: {w2v.dataset.loc[i, 'thread_id']}, title: {w2v.dataset.loc[i, 'title']}, url: {w2v.dataset.loc[i, 'url']}, score: {scores[i]}")
+        print("\nbottom 5 least relevant:")
+        for i in idxs[:5]:
+            print(f"document: {w2v.dataset.iloc[i, 1]}, score: {scores[i]:.4f}")

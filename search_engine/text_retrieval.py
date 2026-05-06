@@ -31,6 +31,11 @@ class TextRetrieval():
     nltk.download('stopwords')
     self.stop_words = set(stopwords.words('english'))
 
+  def _bm25_doc_column(self):
+    if self.dataset is not None and "full_text" in self.dataset.columns:
+      return "full_text"
+    return "content"
+
   def save_preprocessed_data(self):
     if self.dataset is None:
       return
@@ -41,14 +46,15 @@ class TextRetrieval():
     if not self.preprocessed_path.exists():
       return False
 
-    self.dataset = pd.read_csv(self.input_path, low_memory=False).fillna("")
+    self.dataset = pd.read_csv(self.preprocessed_path, low_memory=False).fillna("")
     if self.dataset.shape[0] == 0:
       self.avdl = 0
       return True
 
+    col = self._bm25_doc_column()
     word_sum = 0
     for _, row in self.dataset.iterrows():
-      word_sum += len(str(row["content"]).split())
+      word_sum += len(str(row[col]).split())
     self.avdl = word_sum / self.dataset.shape[0]
     return True
 
@@ -112,8 +118,9 @@ class TextRetrieval():
     ### dataset has to be read before calling the vocabulary construction
 
     frq = {}
+    col = self._bm25_doc_column()
     for index, row in self.dataset.iterrows():
-      line = row["content"]
+      line = row[col]
       words = line.split()
       for w in words:
         frq[w] = frq.get(w, 0) + 1
@@ -183,12 +190,13 @@ class TextRetrieval():
     self.adapt_vocab_query(query) #Ensure query is part of the "common language" of documents and query 
 
     # global IDF
-    self.compute_IDF(self.dataset.shape[0],self.dataset["content"]) 
+    col = self._bm25_doc_column()
+    self.compute_IDF(self.dataset.shape[0], self.dataset[col])
 
     relevances = np.zeros(self.dataset.shape[0]) #Initialize relevances of all documents to 0
 
     for i in range(relevances.size):
-      relevances[i] = self.BM25PLN_score(query, self.dataset.loc[i, "content"], True)
+      relevances[i] = self.BM25PLN_score(query, self.dataset.loc[i, col], True)
 
     return relevances #in the same order of the documents in the dataset
 
@@ -200,7 +208,7 @@ if __name__ == '__main__':
       tr.save_preprocessed_data()
     tr.build_vocabulary() #builds an initial vocabulary based on common words
     queries = ["roman empire collapse", "medieval trade routes", "american civil war causes", "french revolution", "fall of berlin wall"]
-    print("#########\n")
+    
     print("Results for BM25PLN")
     for query in queries:
       print("\nQUERY:",query)
