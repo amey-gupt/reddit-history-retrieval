@@ -1,12 +1,9 @@
-# search_engine (and shared numerics)
 pandas
 numpy
 scikit-learn
 gensim
 nltk
 tqdm
-
-# other project dependencies
 rank-bm25
 sentence-transformers
 faiss-cpu

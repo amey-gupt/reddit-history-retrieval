@@ -32,6 +32,8 @@ Notes:
 - Use the activated root environment for all Python work in this project.
 
 ### Download + Quick Validation (AskHistorians)
+Note: if you would like to skip downloading/processing the data on your own machine, feel free to use our finished CSV! The link is in the [preprocessing section](#preprocessing).
+
 Run from `search_engine` after activating the root environment.
 
 ```powershell
@@ -51,16 +53,79 @@ Expected result:
 - The first command prints a large line count (about 2 million).
 - The second command prints keys including `id`, `user`, `root`, `reply_to`, `timestamp`, `text`, `meta`.
 
-### Current Goal
-1. Retrieval target: thread-level ranking (title + post + top comments merged into one document).
-2. Primary dataset: Cornell Reddit October 2018, AskHistorians first.
-3. Baseline model: BM25.
-4. Semantic model: one sentence-transformer + FAISS.
-5. Metrics: Precision@5, Precision@10, MRR.
-6. Milestone 1 goal: “One query returns top 10 threads through web app from local index.”
+Carrying forward, all next commands below assume:
+- You created/activated the root `.venv` (see Setup above)
+- You are running from the repository root unless stated otherwise
 
-### Potential API Endpoint
+### Preprocessing
+This produces:
+- `data/processed/threads.csv`
+- `data/processed/threads_preprocessed.csv`
+- `data/processed/topic_labels.csv`
 
-POST /search
-Input: query, top_k, method (bm25 or dense)
-Output: ranked list with thread_id, title, subreddit, score, snippet, url
+Note that preprocessing prepares a large file (can be 1-2 GB) and can take over an hour.
+If you would like to instead download the CSV, please [click here](https://drive.google.com/drive/folders/1EJ3oJgJsaZpWx1gWF0aLedisRLFc1iIs?usp=sharing). If you decide to use our file, please place the file inside `/data/processed/` after downloading. The full path should be `reddit-history-retrieval/data/processed/threads_preprocessed.csv`.
+
+If you would like to run the preprocessing yourself, please use the following command usage:
+```powershell
+python -m search_engine.preprocess --build-threads-csv `
+  --input "data\processed\threads.csv" `
+  --num-topics 100 `
+  --passes 5 `
+  --chunk-size 2000
+```
+
+Arguments:
+- `--build-threads-csv`: build `threads.csv` from the downloaded raw corpus
+- `--input`: path to `threads.csv` (used for preprocessing + topic training)
+- `--num-topics`: number of LDA topics (default 100)
+- `--passes`: number of LDA training passes (default 5; each pass takes a long time if running on a personal machine)
+- `--chunk-size`: docs per update chunk (default 2000)
+
+### Retrieval
+
+#### BM25 (lexical)
+Demo: `python -m search_engine.text_retrieval`
+
+Usage:
+```powershell
+python -m search_engine.text_retrieval --query "roman empire collapse" --top-k 10 `
+  --input "data\processed\threads_preprocessed.csv"
+```
+
+Arguments:
+- `--query`: query text (if omitted, runs a 5-query demo)
+- `--top-k`: number of results to print (top and bottom; default 10)
+- `--input`: path to `threads_preprocessed.csv` (this is the default; may be changed to a different file)
+
+#### Word2Vec (semantic)
+Demo: `python -m search_engine.word2vec_retrieval.py`
+
+Usage:
+```powershell
+python -m search_engine.word2vec_retrieval --query "roman empire collapse" --top-k 10 `
+  --input "data\processed\threads_preprocessed.csv" `
+  --model "glove-wiki-gigaword-50"
+```
+
+Arguments:
+- `--query`: query text (if omitted, runs a 5-query demo)
+- `--top-k`: number of results to print (default 10)
+- `--input`: path to `threads_preprocessed.csv` (this is the default; may be changed to a different file)
+- `--model`: gensim model key (default `glove-wiki-gigaword-50`)
+
+### Topic Modeling
+Topic training happens during preprocessing (see above). Use this script to explore the trained topics.
+
+List topics:
+
+```powershell
+python search_engine\topic_modeling.py topics
+```
+
+List documents for a topic id or label:
+
+```powershell
+python search_engine\topic_modeling.py docs 12
+python search_engine\topic_modeling.py docs "rome_empire_western"
+```

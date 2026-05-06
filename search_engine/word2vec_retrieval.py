@@ -3,6 +3,8 @@ import pandas as pd
 from pathlib import Path
 import gensim.downloader as api
 from sklearn.metrics.pairwise import cosine_similarity
+import argparse
+import sys
 
 class Word2VecRetrieval:
 
@@ -58,25 +60,63 @@ class Word2VecRetrieval:
         return scores
 
 
-if __name__ == '__main__':
+def main(argv: list[str] | None = None) -> int:
+    p = argparse.ArgumentParser(
+        prog="word2vec_retrieval.py",
+        description="Semantic retrieval using averaged pretrained GloVe vectors.",
+    )
+    p.add_argument("--input", default=None, help="Path to preprocessed CSV (defaults to data/processed/threads_preprocessed.csv).")
+    p.add_argument("--query", default=None, help="Search query text. If omitted, runs a 5-query demo.")
+    p.add_argument("--top-k", type=int, default=10, help="Number of results to print.")
+    p.add_argument(
+        "--model",
+        default="glove-wiki-gigaword-50",
+        help="Gensim downloader key (default: glove-wiki-gigaword-50).",
+    )
+    args = p.parse_args(argv)
+
     w2v = Word2VecRetrieval()
+    if args.input:
+        w2v.preprocessed_path = Path(args.input)
 
     if not w2v.load_preprocessed_data():
-        exit()
+        return 2
 
-    w2v.load_model()
+    print(f"Loading pretrained vectors: {args.model}")
+    w2v.w2v_model = api.load(args.model)
+    w2v._build_doc_vectors()
 
-    queries = ["roman empire collapse", "medieval trade routes", "american civil war causes"]
+    demo_queries = [
+        "roman empire collapse",
+        "medieval trade routes",
+        "american civil war causes",
+        "french revolution",
+        "fall of berlin wall",
+    ]
+    queries = [args.query] if args.query else demo_queries
+
+    k = max(1, int(args.top_k))
     print("Results for Word2Vec (GloVe pretrained)")
+
     for query in queries:
         print("\nQUERY:", query)
         scores = w2v.execute_search_word2vec(query)
+        if scores.size == 0:
+            print("No scores computed.")
+            return 3
+
         idxs = np.argsort(scores)
 
-        print("\ntop 5 most relevant:")
-        for i in reversed(idxs[-5:]):
+        print(f"\ntop {k} most relevant:")
+        for i in reversed(idxs[-k:]):
             print(f"document: {w2v.dataset.iloc[i, 1]}, score: {scores[i]:.4f}")
 
-        print("\nbottom 5 least relevant:")
-        for i in idxs[:5]:
+        print(f"\nbottom {k} least relevant:")
+        for i in idxs[:k]:
             print(f"document: {w2v.dataset.iloc[i, 1]}, score: {scores[i]:.4f}")
+
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main(sys.argv[1:]))

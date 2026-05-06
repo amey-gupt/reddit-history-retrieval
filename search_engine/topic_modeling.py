@@ -11,7 +11,7 @@ LABELS_PATH = REPO_ROOT / "data" / "processed" / "topic_labels.csv"
 def list_topics():
     if not LABELS_PATH.exists():
         print("no trained model found.") 
-        print("please run: python search_engine/preprocess.py")
+        print("please run: python -m search_engine.preprocess")
         return
     labels_df = pd.read_csv(LABELS_PATH)
     for _, row in labels_df.iterrows():
@@ -21,7 +21,7 @@ def list_topics():
 def list_documents(topic_query):
     if not THREADS_PREPROCESSED_PATH.exists() or not LABELS_PATH.exists():
         print("no trained model found.") 
-        print("please run: python search_engine/preprocess.py")
+        print("please run: python -m search_engine.preprocess")
         return
 
     labels_df = pd.read_csv(LABELS_PATH)
@@ -68,51 +68,15 @@ def list_documents(topic_query):
 def main():
     if len(sys.argv) < 2:
         print("Usage:")
-        print("  python topic_modeling.py train [--passes N] [--chunk-size N] [--num-topics N]")
         print("  python topic_modeling.py topics")
         print("  python topic_modeling.py docs <topic_label_or_id>")
+        print("")
+        print("Note: topic training is done during preprocessing:")
+        print("  python -m search_engine.preprocess")
         return
 
     command = sys.argv[1]
-    if command == "train":
-        # Training pipeline lives in prepare_data.py; this command delegates.
-        from search_engine import prepare_data as pdprep
-
-        passes = pdprep.DEFAULT_LDA_PASSES
-        chunk_size = pdprep.DEFAULT_LDA_CHUNK_SIZE
-        num_topics = pdprep.DEFAULT_NUM_TOPICS
-
-        args = sys.argv[2:]
-        i = 0
-        while i < len(args):
-            a = args[i]
-            if a == "--passes":
-                if i + 1 >= len(args):
-                    print("Missing value for --passes")
-                    return
-                passes = int(args[i + 1])
-                i += 2
-                continue
-            if a == "--chunk-size":
-                if i + 1 >= len(args):
-                    print("Missing value for --chunk-size")
-                    return
-                chunk_size = int(args[i + 1])
-                i += 2
-                continue
-            if a == "--num-topics":
-                if i + 1 >= len(args):
-                    print("Missing value for --num-topics")
-                    return
-                num_topics = int(args[i + 1])
-                i += 2
-                continue
-
-            print(f"Unknown flag: {a}")
-            return
-
-        pdprep.run(num_topics=num_topics, lda_passes=passes, chunk_size=chunk_size)
-    elif command == "topics":
+    if command == "topics":
         list_topics()
     elif command == "docs":
         if len(sys.argv) < 3:

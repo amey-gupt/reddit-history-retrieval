@@ -6,6 +6,7 @@ from nltk.corpus import stopwords
 import math
 import json
 from pathlib import Path
+import argparse
 
 class TextRetrieval():
 
@@ -164,7 +165,6 @@ class TextRetrieval():
   #### Okapi-BM25 with pivoted length normalization
 
   def text2BM25PLN(self,text, applyBM25_and_IDF=True):
-    ### returns the bit vector representation of the text
 
     BM25PLNVector = np.zeros(self.vocab.size)
 
@@ -201,23 +201,62 @@ class TextRetrieval():
     return relevances #in the same order of the documents in the dataset
 
 
-if __name__ == '__main__':
+def main(argv: list[str] | None = None) -> int:
+    p = argparse.ArgumentParser(
+        prog="text_retrieval.py",
+        description="BM25 (pivoted length normalization) retrieval over preprocessed threads.",
+    )
+    p.add_argument("--input", default=None, help="Path to preprocessed CSV (defaults to data/processed/threads_preprocessed.csv).")
+    p.add_argument("--query", default=None, help="Search query text. If omitted, runs a 5-query demo.")
+    p.add_argument("--top-k", type=int, default=10, help="Number of results to print (top and bottom).")
+    args = p.parse_args(argv)
+
     tr = TextRetrieval()
+    if args.input:
+        tr.preprocessed_path = Path(args.input)
+
     if not tr.load_preprocessed_data():
-      tr.read_and_preprocess_Data_File() #builds the collection
-      tr.save_preprocessed_data()
-    tr.build_vocabulary() #builds an initial vocabulary based on common words
-    queries = ["roman empire collapse", "medieval trade routes", "american civil war causes", "french revolution", "fall of berlin wall"]
-    
-    print("Results for BM25PLN")
+        print("Preprocessed data not found. Run preprocessing first.")
+        return 2
+
+    tr.build_vocabulary()
+
+    demo_queries = [
+      "roman empire collapse",
+      "medieval trade routes",
+      "american civil war causes",
+      "french revolution",
+      "fall of berlin wall",
+    ]
+    queries = [args.query] if args.query else demo_queries
+
+    k = max(1, int(args.top_k))
+
     for query in queries:
-      print("\nQUERY:",query)
+      print("\nQUERY:", query)
       relevance_docs = tr.execute_search_BM25PLN(query)
       idxs = np.argsort(relevance_docs)
-      print("\ntop 10 most relevant:")
-      for i in reversed(idxs[-10:]):
-        print(f"thread_id: {tr.dataset.loc[i, 'thread_id']}, title: {tr.dataset.loc[i, 'title']}, url: {tr.dataset.loc[i, 'url']}, score: {relevance_docs[i]}")
 
-      print("\nbottom 10 least relevant:")
-      for i in idxs[:10]:
-        print(f"thread_id: {tr.dataset.loc[i, 'thread_id']}, title: {tr.dataset.loc[i, 'title']}, url: {tr.dataset.loc[i, 'url']}, score: {relevance_docs[i]}")
+      print(f"\ntop {k} most relevant:")
+      for i in reversed(idxs[-k:]):
+        print(
+          f"thread_id: {tr.dataset.loc[i, 'thread_id']}, "
+          f"title: {tr.dataset.loc[i, 'title']}, "
+          f"url: {tr.dataset.loc[i, 'url']}, "
+          f"score: {relevance_docs[i]}"
+        )
+
+      print(f"\nbottom {k} least relevant:")
+      for i in idxs[:k]:
+        print(
+          f"thread_id: {tr.dataset.loc[i, 'thread_id']}, "
+          f"title: {tr.dataset.loc[i, 'title']}, "
+          f"url: {tr.dataset.loc[i, 'url']}, "
+          f"score: {relevance_docs[i]}"
+        )
+
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
